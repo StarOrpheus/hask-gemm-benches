@@ -30,11 +30,11 @@ data TestResolution = TestResolution { testRunId     :: String
                                      , testRunResult :: Either String ()
                                      } deriving (Show)
 
-formatTestName :: String 
-               -> String 
+formatTestName :: String
+               -> String
 formatTestName testId = "Test - " ++ show testId ++ ".data"
 
-createTestFile :: Test 
+createTestFile :: Test
                -> IO ()
 createTestFile (Test testData _ testName) = writeFile (formatTestName testName) testData
 
@@ -51,10 +51,11 @@ getStudentAnswer solution test@(Test _ query testId) = do
   (ans, exitCode) <- getInternal
   return $ either Left (\ans -> Right (ans, exitCode)) (checkIO ans)
   where
-    getInternal = do (inp, out, _, pid) <- runSolution solution [formatTestName testId, query]
-                     !ans      <- tryIOError $ hGetLine out
-                     !exitCode <- waitForProcess pid
-                     return (ans, exitCode)
+    getInternal = do
+      (inp, out, _, pid) <- runSolution solution [formatTestName testId, query]
+      !ans      <- tryIOError $ hGetLine out
+      !exitCode <- waitForProcess pid
+      return (ans, exitCode)
     checkExitCode exitCode ans = case exitCode of
                                    ExitSuccess      -> pure ans
                                    ExitFailure code -> makeError "Solution's exit code != 0, is " code
@@ -63,11 +64,12 @@ getStudentAnswer solution test@(Test _ query testId) = do
 
 getRealAnswer :: Test
               -> IO (Either String Bool)
-getRealAnswer (Test _ query testId) = do eitherText <- tryIOError $ readFile $ formatTestName testId
-                                         let result = hasSubStr <$> eitherText
-                                         return $ case result of
-                                          Left err  -> Left $ "Failed to open the test file: " ++ ioeGetErrorString err
-                                          Right res -> Right res
+getRealAnswer (Test _ query testId) = do
+  eitherText <- tryIOError $ readFile $ formatTestName testId
+  let result = hasSubStr <$> eitherText
+  return $ case result of
+   Left err  -> Left $ "Failed to open the test file: " ++ ioeGetErrorString err
+   Right res -> Right res
   where
     hasSubStr :: String -> Bool
     hasSubStr "" = False
@@ -78,11 +80,13 @@ getRealAnswer (Test _ query testId) = do eitherText <- tryIOError $ readFile $ f
 runParTest :: FilePath   -- Path to student's executable
            -> Test       -- Given test
            -> Eval (IO TestResolution)
-runParTest solution test = do studentResultIo <- rpar $ getStudentAnswer solution test
-                              ourAnswerIo <- rseq $ getRealAnswer test
-                              rseq studentResultIo
-                              let resolutionIo = makeResolution studentResultIo ourAnswerIo
-                              return resolutionIo
+runParTest solution test = do
+  studentResultIo <- rpar $ getStudentAnswer solution test
+  ourAnswerIo <- rseq $ getRealAnswer test
+  rseq studentResultIo
+  let resolutionIo = makeResolution studentResultIo ourAnswerIo
+  return resolutionIo
+
   where
     asResolution = TestResolution (testName test)
 
@@ -107,5 +111,6 @@ runParTest solution test = do studentResultIo <- rpar $ getStudentAnswer solutio
 runParTests :: FilePath
             -> [Test]
             -> IO [TestResolution]
-runParTests solution tests = do let testEvals = runParTest solution <$> tests
-                                sequence $ runEval $ sequence testEvals
+runParTests solution tests = do
+  let testEvals = runParTest solution <$> tests
+  sequence $ runEval $ sequence testEvals
