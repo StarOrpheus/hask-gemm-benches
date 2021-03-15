@@ -38,4 +38,3 @@ int main(int argc, char** argv)
     auto result = buffer.find(argv[2]) != buffer.npos;
     puts(result ? "Yes" : "No");
 }
-
