@@ -5,10 +5,13 @@ import System.Environment
 import Control.Monad
 import Control.Exception
 
-newtype TestFailedException = TestFailedException String
+data TestFailedException = TestFailedException
+  { failedTestName  :: String
+  , failedTestCause :: String
+  }
 
 instance Show TestFailedException where
-  show (TestFailedException s) = s
+  show (TestFailedException name cause) = "Test \"" ++ name ++ "\" failed:\n" ++ cause
 
 instance Exception TestFailedException
 
@@ -55,5 +58,5 @@ main = do
     results <- runParTests solution tests
     forM_ results checkResolution
   where
-    checkResolution (TestResolution id (Left err)) = throwIO $ TestFailedException err
+    checkResolution (TestResolution id (Left err)) = throwIO $ TestFailedException id err
     checkResolution (TestResolution id _) = putStrLn $ "Test \"" ++ id ++ "\" -- OK"
