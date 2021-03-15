@@ -7,22 +7,17 @@ module Lib
     , TestData(..)
     ) where
 
-import Text.Read
-import Data.Either
 import Data.Semigroup ((<>))
-import Data.List
-import System.IO
-import System.Exit
+import Data.List ( isInfixOf )
+import System.IO ( Handle, hGetLine )
+import System.Exit ( ExitCode(..) )
 import System.Process
-import System.IO.Error
-import System.Environment
-import System.Directory
-import Control.Parallel.Strategies
-import Control.Monad
-import Control.Exception
-
-import System.Random
-import Options.Applicative
+    ( runInteractiveProcess, waitForProcess, ProcessHandle )
+import System.IO.Error ( tryIOError )
+import System.Directory ( doesDirectoryExist, doesPathExist )
+import Control.Parallel.Strategies ( rpar, rseq, runEval, Eval )
+import Control.Monad ( when )
+import Control.Exception ( throwIO, Exception )
 
 newtype RunPreparationFailed = RunPreparationFailed String
 

@@ -1,9 +1,14 @@
 module Main where
 
 import Lib
-import System.Environment
-import Control.Monad
-import Control.Exception
+    ( TestResolution(TestResolution),
+      Test(Test),
+      TestData(RegularTest, GenerateEnoentTest, GenerateReadErrTest,
+               GenerateBadArgsTest),
+      runParTests )
+import System.Environment ( getArgs )
+import Control.Monad ( forM_ )
+import Control.Exception ( throwIO, Exception )
 
 data TestFailedException = TestFailedException
   { failedTestName  :: String
