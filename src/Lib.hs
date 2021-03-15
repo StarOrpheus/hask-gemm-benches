@@ -25,7 +25,9 @@ import System.Random
 import Options.Applicative
 
 newtype RunPreparationFailed = RunPreparationFailed String
-  deriving (Show)
+
+instance Show RunPreparationFailed where
+  show (RunPreparationFailed s) = s
 
 instance Exception RunPreparationFailed
 

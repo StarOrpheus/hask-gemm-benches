@@ -6,7 +6,9 @@ import Control.Monad
 import Control.Exception
 
 newtype TestFailedException = TestFailedException String
-  deriving (Show)
+
+instance Show TestFailedException where
+  show (TestFailedException s) = s
 
 instance Exception TestFailedException
 
