@@ -10,7 +10,7 @@ module Lib
 import Text.Read
 import Data.Either
 import Data.Semigroup ((<>))
-
+import Data.List
 import System.IO
 import System.Exit
 import System.Process
@@ -92,16 +92,10 @@ getRealAnswer :: Test
               -> IO (Either String Bool)
 getRealAnswer (Test testInfo testId) = do
   case testInfo of
-    RegularTest text query    -> return $ Right $ hasSubStr text query
+    RegularTest text query    -> return $ Right $ isInfixOf text query
     GenerateEnoentTest        -> return $ Left "No such test file"
     GenerateReadErrTest       -> return $ Left "Test file read error"
     GenerateBadArgsTest       -> return $ Left "Bad usage error"
-  where
-    hasSubStr :: String -> String -> Bool
-    hasSubStr "" _ = False
-    hasSubStr left query
-      | take (length query) left == query   = True
-      | otherwise                           = hasSubStr (tail left) query
 
 runParTest :: FilePath   -- Path to student's executable
            -> Test       -- Given test
