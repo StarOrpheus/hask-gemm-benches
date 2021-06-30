@@ -1,67 +1,51 @@
 module Main where
 
-import Lib
-    ( TestResolution(TestResolution),
-      Test(Test),
-      TestData(RegularTest, GenerateEnoentTest, GenerateReadErrTest,
-               GenerateBadArgsTest),
-      runParTests )
-import System.Environment ( getArgs )
-import Control.Monad ( forM_ )
-import Control.Exception ( throwIO, Exception )
+import Data.Vector ( generateM, Vector, replicate, generate, (!))
+import Data.Vector.Split (chunksOf)
+import Control.Monad
+import Criterion.Main
+import System.Random
 
-data TestFailedException = TestFailedException
-  { failedTestName  :: String
-  , failedTestCause :: String
-  }
+generateFloatMatrix n m = do
+  d <- generateM (n*m) (\_ -> randomIO :: IO Float)
+  return $ Matrix n m d
 
-instance Show TestFailedException where
-  show (TestFailedException name cause) = "Test \"" ++ name ++ "\" failed:\n" ++ cause
+generateIntMatrix n m = do
+  d <- generateM (n*m) (\_ -> randomIO :: IO Int)
+  -- return $ Matrix n m d
+  return $ Matrix n m (generate (n * m) id)
 
-instance Exception TestFailedException
+testN = 500
+testM = 1000
+testK = 500
 
-simpleEq = Test (RegularTest "aaa" "aaa") "data equals query"
+data Matrix a = Matrix Int Int (Vector a)
 
-simpleYes = Test (RegularTest "aaa" "a") "simple char search - positive"
+matrixAt :: Matrix a
+         -> Int
+         -> Int
+         -> a
 
-simpleNo = Test (RegularTest "aaa" "b") "simple char search - negative"
+matrixAt (Matrix n m d) i j = d ! (i * m + j)
 
-checkPrefixMove = Test (RegularTest "ababar" "abar") "naive prefix automato test"
+-- | for the given N, M, K, matrixes A and B, and position pos, calculates (A*B)[pos]
+gemmAtPoint :: (Num a)
+            => Matrix a
+            -> Matrix a
+            -> Int -- Position to calculate
+            -> a -- result
 
-simpleEnoent = Test GenerateEnoentTest "simple enoent run"
-
-simpleReadErr = Test GenerateReadErrTest "simple read err test"
-
-simpleManyArgs = Test GenerateBadArgsTest "simple many args test"
-
-loadBibleDataset :: IO [Test]
-loadBibleDataset = do
-  bible <- readFile "assets/kjvbible.txt"
-  return [ Test (RegularTest bible "lewd") "Bible test 1"
-         , Test (RegularTest bible "") "Bible test 2"
-         , Test (RegularTest bible "foobarbaz") "Bible test 3"
-         , Test (RegularTest (bible ++ "foobarbaz") "foobarbaz") "Bible test 4"
-         ]
+gemmAtPoint a b@(Matrix m k _) pos = do
+  let i = pos `div` k
+  let j = pos `mod` k
+  let calc mid = matrixAt a i mid * matrixAt b mid j
+  sum (map calc [0..(m - 1)])
 
 main :: IO ()
 main = do
-  bibleDataset <- loadBibleDataset
-  let tests = [ simpleEq
-              , simpleYes
-              , checkPrefixMove
-              , simpleNo
-              , simpleEnoent
-              , simpleReadErr
-              , simpleManyArgs
-              ]
-            ++ bibleDataset
-  args <- getArgs
-  if length args /= 1 then do
-    putStrLn "Path to student solution expected as the only one argument"
-  else do
-    let solution = head args
-    results <- runParTests solution tests
-    forM_ results checkResolution
-  where
-    checkResolution (TestResolution id (Left err)) = throwIO $ TestFailedException id err
-    checkResolution (TestResolution id _) = putStrLn $ "Test \"" ++ id ++ "\" -- OK"
+  matrixA@(Matrix _ _ m1) <- generateIntMatrix testN testM
+  matrixB@(Matrix _ _ m2) <- generateIntMatrix testM testK
+
+  let fixedPointGemm = gemmAtPoint matrixA matrixB
+
+  defaultMain [ bgroup "gemm-bench" [ bench "simple" $ whnf (generate (testN * testK)) fixedPointGemm]]

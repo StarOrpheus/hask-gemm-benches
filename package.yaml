@@ -1,14 +1,10 @@
-name:                hask-hello-world
+name:                hask-gemm-benches
 version:             0.1.0.0
-github:              "githubuser/hask-hello-world"
+github:              "StarOrpheus/hask-gemm-benches"
 license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2020 Author name here"
-
-extra-source-files:
-- README.md
-- ChangeLog.md
+author:              "Zakhar Koval"
+maintainer:          "ellesterate@gmail.com"
+copyright:           "2021 Zakhar Koval"
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -17,22 +13,13 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/hask-hello-world#readme>
+description:         Please see the README on GitHub at <https://github.com/githubuser/hask-gemm-benches#readme>
 
 dependencies:
 - base >= 4.7 && < 5
 
-library:
-  source-dirs: src
-  dependencies:
-    - random
-    - optparse-applicative
-    - process
-    - parallel
-    - directory
-
 executables:
-  hask-hello-world-exe:
+  hask-gemm-benches-exe:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -40,15 +27,7 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - hask-hello-world
-
-tests:
-  hask-hello-world-test:
-    main:                Spec.hs
-    source-dirs:         test
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - hask-hello-world
+    - vector
+    - random
+    - vector-split
+    - criterion
